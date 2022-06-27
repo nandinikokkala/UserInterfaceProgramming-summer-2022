@@ -3,6 +3,8 @@ var express = require('express');
 const { body, validationResult } = require('express-validator');
 var userRoute = express.Router();
 var UserModel = require('../models/user');
+const { requireAuth } = require('../models/auth');
+
 
 var query = process.env.DATABASE_URI
 const db = (query);
