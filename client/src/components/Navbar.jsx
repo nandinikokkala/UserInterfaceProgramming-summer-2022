@@ -7,7 +7,7 @@ const NavBar = () => {
         <Container>
             <Navbar  bg="light" expand="lg" className="mb-3">
                 <Container fluid>
-                    <Navbar.Brand href="#">APP</Navbar.Brand>
+                    <Navbar.Brand href="#">MEDIA APP</Navbar.Brand>
                     <Navbar.Toggle aria-controls="offcanvasNavbar-expand-lg" />
                     <Navbar.Offcanvas
                     id="offcanvasNavbar-expand-lg"
