@@ -2,7 +2,8 @@ var mongoose = require('mongoose');
 var express = require('express'); 
 var postRoute = express.Router();
 var PostModel = require('../models/post');
-  
+const verifyToken = require('../middleware/verifyToken');
+
 var query = process.env.DATABASE_URI
 const db = (query);
 mongoose.Promise = global.Promise;
@@ -25,21 +26,34 @@ postRoute
             }
         });  
     })
+    //get user post
+    .post('/user',verifyToken, function(req, res) {
+        PostModel.find({userId: req.body.userId},function(err, posts) {
+            if(err){
+                console.log(err);
+            }
+            else{
+                console.log("User posts");
+                res.send({ success: true, message: "User posts", posts});
+            }
+        });  
+    })
     //save new post
-    .post('/save', function(req, res) {
+    .post('/save', verifyToken, function(req, res) {
     
         var NewPost = new PostModel();
-        NewPost.postId = req.body.postId;
+        //NewPost.postId = 1;
         NewPost.userId = req.body.userId;
         NewPost.postTittle = req.body.postTittle;
         NewPost.content = req.body.content;
-    
+
         NewPost.save(function(err, data){
             if(err){
                 console.log(error);
             }
             else{
-                res.send({ success: true, message: "Post Saved", data});
+                console.log('Saved new post',data );
+                res.send({ success: true, message: "New post saved successfully", data});
             }
         });
     })

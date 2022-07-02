@@ -2,7 +2,6 @@ var mongoose = require('mongoose');
 var express = require('express'); 
 var userRoute = express.Router();
 var UserModel = require('../models/user');
-const { requireAuth } = require('../models/auth');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -15,6 +14,7 @@ useUnifiedTopology: true }, function(error) {
         console.log("Error!" + error);
     }
 });
+
 
 userRoute
     //list all users
@@ -30,27 +30,41 @@ userRoute
     })
     //create new use
     .post('/register', function(req, res) {
-    
-        var NewUser = new UserModel();
 
-        bcrypt.hash(req.body.password, +process.env.SALT_ROUNDS, function(err, hash) {
-            if(err){
-                console.log(err);
-            }
-            else{  
-                NewUser.userId = req.body.userId;
-                NewUser.userName = req.body.userName;
-                NewUser.email = req.body.email;
-                NewUser.password = hash;
+        //check if user exist
+        UserModel.exists({email: req.body.email}, function (err, exist) {
+            if (err){
+                console.log(err)
+            }else{
+                console.log("User exist :", exist) // true
+                if(!exist){
+                    bcrypt.hash(req.body.password, +process.env.SALT_ROUNDS, function(err, hash) {
+                        if(err){
+                            console.log(err);
+                        }
+                        else{ 
+                            var NewUser = new UserModel();
+                            //NewUser.userId = 1;
+                            NewUser.userName = req.body.name;
+                            NewUser.email = req.body.email;
+                            NewUser.password = hash;
+                            NewUser.refreshToken = null;
+                            NewUser.save(function(err, data){
+                                if(err){
+                                    console.log(error);
+                                }
+                                else{
+                                    console.log('User Registered');
+                                    res.send({ success: true, message: "Registered successfully you can now login"});
+                                }
+                            });
+                        }
+                    });
 
-                NewUser.save(function(err, data){
-                    if(err){
-                        console.log(error);
-                    }
-                    else{
-                        res.send({ success: true, message: "New user registered", data});
-                    }
-                });
+                }
+                else{
+                    res.send({ success: false, message: "Email already tacken please use a different one"});
+                }
             }
         });
         
@@ -60,32 +74,54 @@ userRoute
     .post('/login', function(req, res) {
     
         UserModel.findOne({email: req.body.email}, 
-            function(err, data) {
+            function(err, user) {
                 if(err){
                     console.log(err);
                 }
                 else{
 
-                    if(!data){
-                        res.send({ success: false, message: 'User not registered'});
+                    if(!user){
+                        console.log('User not registered');
+                        res.status(404).send({ success: false, message: 'User not registered'});
                         return
                     }
 
-                    bcrypt.compare(req.body.password, data.password, function(err, result) {
+                    bcrypt.compare(req.body.password, user.password, function(err, result) {
                         // result == true
                         if(err){
                             console.log(err);
                         }
                         else{
                             if(result){
-
-                                const token = jwt.sign( data, process.env.JWT_SECRET);
-                                const user = { ...data, token };
-                                res.send({ success: true,  message: 'User loggedin' , user});
-                    
+                                console.log('User signed in successfully', user);
+                                const userId = user.userId;
+                                const name = user.userName;
+                                const email = user.email;
+                                const accessToken = jwt.sign({userId, name, email}, process.env.ACCESS_TOKEN_SECRET,{
+                                    expiresIn: '20m'
+                                });
+                                const refreshToken = jwt.sign({userId, name, email}, process.env.REFRESH_TOKEN_SECRET,{
+                                    expiresIn: '1d'
+                                });
+                                //update tocken
+                                
+                                UserModel.findOneAndUpdate({email: email}, 
+                                    { refreshToken : refreshToken}, function(err, data) {
+                                        if(err){
+                                            console.log(err);
+                                        }
+                                        else{
+                                            res.cookie('refreshToken', refreshToken,{
+                                                httpOnly: true,
+                                                maxAge: 24 * 60 * 60 * 1000
+                                            }).send({ accessToken });
+                                            return   
+                                        }
+                                    });    
                             }
                             else{
-                                res.send({ success: false, message: 'Invalid password'});
+                                console.log('Invalid password');
+                                res.status(404).json({ success: false, message: 'Invalid password'});
                                 return
         
                             }
@@ -97,6 +133,67 @@ userRoute
         
     })
 
+    //get refresh tocken
+    .get('/token', function(req, res) {
+        try {
+            const refreshToken = req.cookies.refreshToken;
+            if(!refreshToken) return res.sendStatus(401);
+
+            UserModel.findOne({refreshToken: refreshToken}, 
+                function(err, user) {
+                    if(err){
+                        console.log(err);
+                    }
+                    else{
+                        if(!user){
+                            return res.sendStatus(403);
+                        }
+                        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+                            if(err) return res.sendStatus(403);
+                            const userId = user.userId;
+                            const name = user.userName;
+                            const email = user.email;
+                            const accessToken = jwt.sign({userId, name, email}, process.env.ACCESS_TOKEN_SECRET);
+                            res.json({ accessToken });
+                        });
+
+                    }
+            });
+
+        } catch (error) {
+            console.log(error);
+        }  
+    })
+
+    //logout
+    .delete('/logout', function(req, res) {
+        const refreshToken = req.cookies.refreshToken;
+        if(!refreshToken) return res.sendStatus(204);
+        UserModel.findOne({refreshToken: refreshToken}, 
+            function(err, user) {
+                if(err){
+                    console.log(err);
+                }
+                else{
+                    if(!user){
+                        return res.sendStatus(204);
+                    }
+                    UserModel.findOneAndUpdate({email: user.email}, 
+                        { refreshToken : null}, function(err, data) {
+                            if(err){
+                                console.log(err);
+                            }
+                            else{
+                                console.log("cookie cleared");
+                                res.clearCookie('refreshToken');
+                                return res.sendStatus(200);  
+                            }
+                        }); 
+
+                }
+            });
+
+    })
     //get user
     .post('/user', function(req, res) {
         UserModel.findOne({email: req.body.email}, 
@@ -110,7 +207,7 @@ userRoute
         });  
     })
     //Delete user
-    .delete('/delete', function(req, res) {
+    .post('/delete', function(req, res) {
         UserModel.remove({email: req.body.email}, 
         function(err, data) {
             if(err){
