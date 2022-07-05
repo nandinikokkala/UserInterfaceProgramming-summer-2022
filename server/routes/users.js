@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var express = require('express'); 
 var userRoute = express.Router();
 var UserModel = require('../models/user');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 var query = process.env.DATABASE_URI
@@ -38,27 +38,31 @@ userRoute
             }else{
                 console.log("User exist :", exist) // true
                 if(!exist){
-                    bcrypt.hash(req.body.password, +process.env.SALT_ROUNDS, function(err, hash) {
-                        if(err){
-                            console.log(err);
-                        }
-                        else{ 
-                            var NewUser = new UserModel();
-                            //NewUser.userId = 1;
-                            NewUser.userName = req.body.name;
-                            NewUser.email = req.body.email;
-                            NewUser.password = hash;
-                            NewUser.refreshToken = null;
-                            NewUser.save(function(err, data){
-                                if(err){
-                                    console.log(error);
-                                }
-                                else{
-                                    console.log('User Registered');
-                                    res.send({ success: true, message: "Registered successfully you can now login"});
-                                }
-                            });
-                        }
+
+                    bcrypt.genSalt(10, function(err, salt) {
+                        bcrypt.hash(req.body.password, salt, function(err, hash) {
+                            // Store hash in your password DB.
+                            if(err){
+                                console.log(err);
+                            }
+                            else{ 
+                                var NewUser = new UserModel();
+                                //NewUser.userId = 1;
+                                NewUser.userName = req.body.name;
+                                NewUser.email = req.body.email;
+                                NewUser.password = hash;
+                                NewUser.refreshToken = null;
+                                NewUser.save(function(err, data){
+                                    if(err){
+                                        console.log(err);
+                                    }
+                                    else{
+                                        console.log('User Registered');
+                                        res.send({ success: true, message: "Registered successfully you can now login"});
+                                    }
+                                });
+                            }
+                        });
                     });
 
                 }

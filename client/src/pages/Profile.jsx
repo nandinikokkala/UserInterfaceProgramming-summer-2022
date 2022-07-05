@@ -7,7 +7,7 @@ import {SERVER_URL} from '../config/config'
 import { useNavigate } from 'react-router-dom';
 import NavBar from "../components/Navbar";
 
-const Home = () => {
+const Profile = () => {
     const [name, setName] = useState('');
     const [userId, setUserId] = useState('');
     const [isLoaded, setIsLoaded] = useState(false);
@@ -144,11 +144,11 @@ const Home = () => {
             <Container>
                 <Row className="justify-content-md-center">
                     <Col sm={12} md={8} xl={6}>
-                        <Card>
+                        <div className="post-card mt-3">
                             <Card.Body>
                                 <Card.Title className="text-center">New post</Card.Title>
                                 {alertType && 
-                                    <Alert variant={alertType}>
+                                    <Alert variant={alertType} className="no-border">
                                         {alertMessage}
                                     </Alert>
                                 }
@@ -180,29 +180,29 @@ const Home = () => {
                                     </Row>
                                 </form>
                             </Card.Body>
-                        </Card> 
+                        </div>
                     </Col>
                 </Row>
                 {posts.length === 0 &&
                     <Row className="justify-content-md-center">
                         <Col sm={12} md={8} xl={6} >
-                            <Card className="mt-3">
+                            <div className="post-card mt-3">
                                 <Card.Body>
                                     <Card.Title className="text-center">You have 0 posts</Card.Title>
                                 </Card.Body>
-                            </Card> 
+                            </div> 
                         </Col>
                     </Row>
                 }
                 {posts.map((post, index) => (
                     <Row className="justify-content-md-center" key={index}>
                         <Col sm={12} md={8} xl={6} >
-                            <Card className="mt-3">
+                            <div className="post-card mt-3">
                                 <Card.Body>
                                     <Card.Title>{post.postTittle}</Card.Title>
                                     <Card.Text>{post.content}</Card.Text>
                                 </Card.Body>
-                            </Card> 
+                            </div>  
                         </Col>
                     </Row>         
                 
@@ -212,4 +212,4 @@ const Home = () => {
         </>
     )
 }
-export default Home;
+export default Profile;
