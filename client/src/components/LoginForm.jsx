@@ -70,7 +70,7 @@ const LoginForm = () => {
                     <form onSubmit={LoginUser}>
                         <h3>Sign In</h3>
                         {alertType && 
-                            <Alert variant={alertType}>
+                            <Alert variant={alertType} className="no-border">
                                 {alertMessage}
                             </Alert>
                         }

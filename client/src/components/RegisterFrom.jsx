@@ -101,7 +101,7 @@ const RegisterForm = () => {
                     <form onSubmit={RegisterUser}>
                         <h3>Sign Up</h3>
                         {alertType && 
-                            <Alert variant={alertType}>
+                            <Alert variant={alertType} className="no-border">
                                 {alertMessage}
                             </Alert>
                         }
