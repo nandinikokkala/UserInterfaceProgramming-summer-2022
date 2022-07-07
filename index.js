@@ -16,5 +16,5 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json()); 
 app.use('/api/users', usersController);
 app.use('/api/posts', postsController);
-const SERVERPORT = process.env.PORT || 3000;
+const SERVERPORT = process.env.PORT || 5000;
 app.listen(SERVERPORT, ()=> console.log(`Server started on port ${SERVERPORT}`));
