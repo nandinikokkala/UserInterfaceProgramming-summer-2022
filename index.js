@@ -7,9 +7,9 @@ const cors = require('cors');
 const usersController = require('./server/routes/users');
 const postsController = require('./server/routes/posts');
 
-//app.use(express.static(__dirname + "/public"));
-//app.get('/', (req,res) => res.sendFile(path.join(__dirname, '/public', 'index.html')));
-app.use(cors({ credentials:true, origin:'http://localhost:3000' }));
+app.use(express.static(__dirname + "/public"));
+app.get('/', (req,res) => res.sendFile(path.join(__dirname, '/public', 'index.html')));
+app.use(cors({ credentials:true, origin:'https://kokkalan.herokuapp.com' }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true})); 

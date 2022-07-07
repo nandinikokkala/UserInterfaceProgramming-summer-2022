@@ -1,11 +1,10 @@
-var mongoose=require('mongoose'),
-autoIncrement = require('mongoose-auto-increment');
-autoIncrement.initialize(mongoose);
+var mongoose=require('mongoose');
+
 var UserSchema = new mongoose.Schema({
-    userName:String,
-    email:String,
-    password:String,
-    refreshToken:String
+    userName:{ type: String, required: true},
+    email:{ type: String, unique: true, required: true},
+    password:{ type: String, required: true},
+    refreshToken:String,
+    userId:{ type: String, unique: true, required: true},
 });
-UserSchema.plugin(autoIncrement.plugin, { model: 'user', field: 'userId' });
 module.exports = mongoose.model('user', UserSchema, 'users');

@@ -51,7 +51,8 @@ userRoute
                                 NewUser.userName = req.body.name;
                                 NewUser.email = req.body.email;
                                 NewUser.password = hash;
-                                NewUser.refreshToken = null;
+                                NewUser.refreshToken = null;    
+                                NewUser.userId = req.body.email;
                                 NewUser.save(function(err, data){
                                     if(err){
                                         console.log(err);

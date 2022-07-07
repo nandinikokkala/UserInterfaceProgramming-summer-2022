@@ -59,6 +59,30 @@ const Profile = () => {
         return Promise.reject(error);
     });
 
+    const deletePost = async (e,post) => {
+        e.preventDefault();
+        const options = {
+            method: 'DELETE',
+            credentials: "include",
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ id: post._id })
+        };
+        fetch(SERVER_URL+'posts/delete', options)
+            .then(response =>response.json())
+            .then(data => {
+                //console.log('Success:', data);
+                getPosts();
+                alert(data.message)
+              })
+            .catch(error => {
+                if (error.response) {
+                    alert('Error post not deleted');
+                }
+            });
+    }
 
     const savePost = async (e) => {
         e.preventDefault();
@@ -121,15 +145,25 @@ const Profile = () => {
     }
 
     const getPosts = async () =>{
-        //console.log('Bear token',token);
-        //get user post
-        const response = await axios.post(SERVER_URL+'posts/user', {userId: userId }, 
-        {
-            headers: {
-            Authorization: `Bearer ${token}`
-        }
-        });
-        setPosts(response.data.posts);
+        const options = {
+            method: 'POST',
+            credentials: "include",
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({userId: userId })
+        };
+        fetch(SERVER_URL+'posts/user', options)
+            .then(response =>response.json())
+            .then(data => {
+                setPosts(data.posts);
+              })
+            .catch(error => {
+                if (error.response) {
+                    console.log(error.response);
+                }
+            });
     }
 
     if(isLoaded){
@@ -201,12 +235,16 @@ const Profile = () => {
                                 <Card.Body>
                                     <Card.Title>{post.postTittle}</Card.Title>
                                     <Card.Text>{post.content}</Card.Text>
+                                    <button className="btn btn-sm btn-danger"  onClick={event=> deletePost(event,post)} >Delete</button>
                                 </Card.Body>
                             </div>  
                         </Col>
                     </Row>         
                 
                 ))}
+                <br/>
+                <br/>
+                <br/>
                 
             </Container>
         </>

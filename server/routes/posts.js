@@ -59,7 +59,7 @@ postRoute
     })
     //get post
     .post('/post', function(req, res) {
-        PostModel.findOne({postId: req.body.postId}, 
+        PostModel.findOne({_id: req.body.postId}, 
         function(err, data) {
             if(err){
                 console.log(err);
@@ -84,13 +84,15 @@ postRoute
     })
     //Post deleted
     .delete('/delete', function(req, res) {
-        PostModel.remove({postId: req.body.postId}, 
+        console.log('Req body',req.body);
+        PostModel.deleteOne({ _id: req.body.id}, 
         function(err, data) {
             if(err){
                 console.log(err);
+                res.status(401).send({ message: err.message });
             }
             else{
-                res.send({ success: true, message: "Post Deleted", data});
+                res.send({ message: "Post Deleted"});
             }
         });  
     })
